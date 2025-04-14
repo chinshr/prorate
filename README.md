@@ -112,3 +112,32 @@ inside the `website/` directory). The data samples are in `data/`. Please provid
 script to run everything.
 
 When finished, please bundle & email us a zip of the results. 
+
+
+# API
+
+curl http://localhost:3000/investors
+curl http://localhost:3000/investors/investor-a
+curl http://localhost:3000/investors/investor-a/investments
+
+```
+curl -X POST http://localhost:3000/api/prorate \
+  -H "Content-Type: application/json" \
+  -d '{
+    "allocation_amount": 100,
+    "investor_amounts": [
+      {
+        "name": "Investor A",
+        "requested_amount": 100,
+        "average_amount": 100
+      },
+      {
+        "name": "Investor B",
+        "requested_amount": 25,
+        "average_amount": 25
+      }
+    ]
+  }'
+```
+
+returns `{"Investor A":80.0,"Investor B":20.0}`

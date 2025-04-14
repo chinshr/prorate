@@ -1,4 +1,5 @@
 Rails.application.routes.draw do
+  get "investments/index"
   get "prorate/create"
   get "investors/index"
   get "investors/show"
