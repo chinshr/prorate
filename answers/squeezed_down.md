@@ -1,5 +1,4 @@
-Prompt
-~~~~~~
+# Prompt
 
 An angry investor sent us a note about how they keep getting squeezed down to $25K per deal even
 though their requested amount is $100K. Underneath the hood, this was because there's limited
@@ -10,8 +9,7 @@ the investor?
 In addition, can you think of a better way we could change the proration basis logic so that
 this could potentially happen less often?
 
-Response
-~~~~~~~~
+# Response
 
 ## 1. How to Respond to the Investor (Damage Control)
 

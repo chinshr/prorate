@@ -1,5 +1,4 @@
-Prompt
-~~~~~~
+# Prompt
 
 Suppose we discover a bug with our algorithm and investors for two deals had incorrect
 allocations. This means that some of the investors ended up investing more than they were allowed to
@@ -7,9 +6,7 @@ while others invested less than they were allowed to. One of deals happened two 
 other one happened two weeks ago. Please describe, in detail, how would you go about correcting this
 issue and how would you communicate this to the affected customers.
 
-Response
-~~~~~~~~
-
+# Response
 
 ## 1. INVESTIGATE & VERIFY
 
