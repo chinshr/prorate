@@ -14,6 +14,7 @@ interface Investor {
 interface InvestorSuggestion {
   name: string;
   slug: string;
+  average_investment_amount: number;
 }
 
 interface ProrationFormProps {}
@@ -25,6 +26,7 @@ export default function ProrationForm({}: ProrationFormProps) {
   const [suggestions, setSuggestions] = useState<InvestorSuggestion[]>([]);
   const [activeSuggestionIndex, setActiveSuggestionIndex] = useState<number>(-1);
   const [validationErrors, setValidationErrors] = useState<Record<number, string>>({});
+  const [focusedInputIndex, setFocusedInputIndex] = useState<number | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const debouncedSearch = useDebouncedCallback(async (query: string, index: number) => {
@@ -98,6 +100,7 @@ export default function ProrationForm({}: ProrationFormProps) {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setSuggestions([]);
+        setFocusedInputIndex(null);
       }
     };
 
@@ -133,7 +136,7 @@ export default function ProrationForm({}: ProrationFormProps) {
       
       const data = await response.json();
 
-      console.log('*** data', data);
+      // console.log('*** data', data);
 
       setProratedAmounts(data);
     } catch (error) {
@@ -170,16 +173,22 @@ export default function ProrationForm({}: ProrationFormProps) {
         <div className="space-y-4">
           {investors.map((investor, index) => (
             <div key={index} className="flex items-center space-x-4">
-              <div className="relative" ref={dropdownRef}>
+              <div className="relative" ref={index === focusedInputIndex ? dropdownRef : null}>
                 <input
                   type="text"
                   value={investor.name}
                   onChange={(e) => handleInvestorNameChange(e, investor, index)}
+                  onFocus={() => {
+                    setFocusedInputIndex(index);
+                    if (investor.name.length > 0) {
+                      debouncedSearch(investor.name, index);
+                    }
+                  }}
                   className="w-48 px-4 py-2 border rounded"
                   placeholder="Investor Name"
                   required
                 />
-                {suggestions.length > 0 && (
+                {suggestions.length > 0 && focusedInputIndex === index && (
                   <div className="absolute z-10 w-48 mt-1 bg-white border rounded shadow-lg">
                     {suggestions.map((suggestion, i) => (
                       <div
