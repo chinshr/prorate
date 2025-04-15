@@ -35,11 +35,17 @@ export default function ProrationForm({}: ProrationFormProps) {
         cache: 'no-store'
       });
       const data = await response.json();
-      setSuggestions(data);
+      
+      // Filter out suggestions that are already in the investors list (excluding the current field)
+      const filteredSuggestions = data.filter((suggestion: InvestorSuggestion) => 
+        !investors.some((investor, i) => i !== index && investor.name === suggestion.name)
+      );
+      
+      setSuggestions(filteredSuggestions);
       setActiveSuggestionIndex(-1);
       
       // Clear validation error if suggestions are found
-      if (data.length > 0) {
+      if (filteredSuggestions.length > 0) {
         setValidationErrors(prev => ({ ...prev, [index]: '' }));
       } else if (query.length > 0) {
         setValidationErrors(prev => ({ ...prev, [index]: 'No matching investor found' }));
