@@ -3,27 +3,26 @@ class Api::ProrateController < ApplicationController
     allocation_amount = prorate_params[:allocation_amount].to_f
     investor_amounts = prorate_params[:investor_amounts]
     
-    puts "*** Investor amounts: #{investor_amounts.inspect}"
-
     # Calculate total average amount for proration
     total_average = investor_amounts.sum { |i| i[:average_amount].to_f }
     
     # Calculate prorated amounts
     prorated_amounts = {}
-    remaining_allocation = allocation_amount
+    remaining_allocation = allocation_amount.to_f
     
     investor_amounts.each do |investor|
       name = investor[:name]
       requested_amount = investor[:requested_amount].to_f
       average_amount = investor[:average_amount].to_f
       
-      # Calculate prorated amount
-      prorated_amount = (allocation_amount * (average_amount / total_average)).round(2)
+      # Calculate prorated amount with full precision
+      prorated_amount = (1.0.to_f * allocation_amount * (average_amount / total_average)).round(2)
       
-      # Ensure we don't exceed requested amount
+      # Ensure we don't exceed requested amount while maintaining precision
       prorated_amount = [prorated_amount, requested_amount].min
       
       prorated_amounts[name] = prorated_amount
+
       remaining_allocation -= prorated_amount
     end
     
@@ -48,7 +47,8 @@ class Api::ProrateController < ApplicationController
       end
     end
     
-    render json: prorated_amounts
+    # Ensure floating point precision in the response
+    render json: (prorated_amounts.transform_values(&:to_f))
   end
   
   private

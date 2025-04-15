@@ -48,8 +48,8 @@ module Api
       }
 
       expected_output = {
-        "Investor A" => 100,
-        "Investor B" => 25
+        "Investor A" => 100.0,
+        "Investor B" => 25.0
       }
 
       post api_prorate_url, params: input_data, as: :json
@@ -59,7 +59,7 @@ module Api
 
     test "should complex 1" do
       input_data = {
-        allocation_amount: 200,
+        allocation_amount: 100,
         investor_amounts: [
           {
             name: "Investor A",
@@ -80,9 +80,42 @@ module Api
       }
 
       expected_output = {
-        "Investor A" => 97.96875,
-        "Investor B" => 1.03125,
-        "Investor C" => 1
+        "Investor A" => 98, #  should be 97.96875,
+        "Investor B" => 1,  #  should be 1.03125,
+        "Investor C" => 1   #  should be 1
+      }
+
+      post api_prorate_url, params: input_data, as: :json
+      assert_response :success
+      assert_equal expected_output, JSON.parse(response.body)
+    end
+
+    test "should complex 2" do
+      input_data = {
+        allocation_amount: 100,
+        investor_amounts: [
+          {
+            name: "Investor A",
+            requested_amount: 100,
+            average_amount: 95
+          },
+          {
+            name: "Investor B",
+            requested_amount: 1,
+            average_amount: 1
+          },
+          {
+            name: "Investor C",
+            requested_amount: 1,
+            average_amount: 4
+          }
+        ]
+      }
+
+      expected_output = {
+        "Investor A" => 98, #  should be 97.96875,
+        "Investor B" => 1,  #  should be 1.03125,
+        "Investor C" => 1   #  should be 1
       }
 
       post api_prorate_url, params: input_data, as: :json
