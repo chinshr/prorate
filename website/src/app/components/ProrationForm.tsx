@@ -29,6 +29,12 @@ export default function ProrationForm({}: ProrationFormProps) {
   const [focusedInputIndex, setFocusedInputIndex] = useState<number | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
+  const checkForDuplicate = (name: string, currentIndex: number): boolean => {
+    return investors.some((investor, index) => 
+      index !== currentIndex && investor.name.toLowerCase() === name.toLowerCase()
+    );
+  };
+
   const debouncedSearch = useDebouncedCallback(async (query: string, index: number) => {
     try {
       const response = await fetch(`http://localhost:3001/api/investors?query=${encodeURIComponent(query)}`, {
@@ -78,6 +84,7 @@ export default function ProrationForm({}: ProrationFormProps) {
     const updatedInvestors = [...investors];
     updatedInvestors[index] = { ...investor, name };
     setInvestors(updatedInvestors);
+    setValidationErrors(prev => ({ ...prev, [index]: '' }));
 
     if (name.length > 0) {
       debouncedSearch(name, index);
@@ -87,7 +94,19 @@ export default function ProrationForm({}: ProrationFormProps) {
     }
   };
 
+  const handleInvestorNameBlur = (name: string, index: number) => {
+    if (name && checkForDuplicate(name, index)) {
+      setValidationErrors(prev => ({ ...prev, [index]: 'This investor name is already in use' }));
+    }
+  };
+
   const handleSuggestionClick = (suggestion: InvestorSuggestion, index: number) => {
+    // Check for duplicate names
+    if (checkForDuplicate(suggestion.name, index)) {
+      setValidationErrors(prev => ({ ...prev, [index]: 'This investor name is already in use' }));
+      return;
+    }
+
     const updatedInvestors = [...investors];
     updatedInvestors[index] = { 
       ...updatedInvestors[index], 
@@ -99,6 +118,20 @@ export default function ProrationForm({}: ProrationFormProps) {
     setValidationErrors(prev => ({ ...prev, [index]: '' }));
     const slug = suggestion.name.toLowerCase().replace(/ /g, '-');
     debouncedFetch(slug, index);
+  };
+
+  const handleAddInvestor = () => {
+    setInvestors([...investors, { name: '', requested_amount: 0, average_amount: 0 }]);
+  };
+
+  const handleRemoveInvestor = (index: number) => {
+    const updatedInvestors = investors.filter((_, i) => i !== index);
+    setInvestors(updatedInvestors);
+    setValidationErrors(prev => {
+      const newErrors = { ...prev };
+      delete newErrors[index];
+      return newErrors;
+    });
   };
 
   // Close dropdown when clicking outside
@@ -116,17 +149,17 @@ export default function ProrationForm({}: ProrationFormProps) {
     };
   }, []);
 
-  const handleAddInvestor = () => {
-    setInvestors([...investors, { name: '', requested_amount: 0, average_amount: 0 }]);
-  };
-
-  const handleRemoveInvestor = (index: number) => {
-    const updatedInvestors = investors.filter((_, i) => i !== index);
-    setInvestors(updatedInvestors);
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Check for duplicate names before submitting
+    const hasDuplicates = investors.some((investor, index) => 
+      investor.name && checkForDuplicate(investor.name, index)
+    );
+
+    if (hasDuplicates) {
+      return;
+    }
     
     try {
       const response = await fetch('http://localhost:3000/api/prorate', {
@@ -141,9 +174,6 @@ export default function ProrationForm({}: ProrationFormProps) {
       });
       
       const data = await response.json();
-
-      // console.log('*** data', data);
-
       setProratedAmounts(data);
     } catch (error) {
       console.error('Error calculating proration:', error);
@@ -184,6 +214,7 @@ export default function ProrationForm({}: ProrationFormProps) {
                   type="text"
                   value={investor.name}
                   onChange={(e) => handleInvestorNameChange(e, investor, index)}
+                  onBlur={() => handleInvestorNameBlur(investor.name, index)}
                   onFocus={() => {
                     setFocusedInputIndex(index);
                     if (investor.name.length > 0) {

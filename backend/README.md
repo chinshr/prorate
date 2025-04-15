@@ -1,24 +1,28 @@
-# README
+# API
 
-This README would normally document whatever steps are necessary to get the
-application up and running.
+curl http://localhost:3000/api/investors
+curl http://localhost:3000/api/investors?query=inve
+curl http://localhost:3000/api/investors/investor-a
+curl http://localhost:3000/api/investors/investor-a/investments
 
-Things you may want to cover:
+```
+curl -X POST http://localhost:3000/api/prorate \
+  -H "Content-Type: application/json" \
+  -d '{
+    "allocation_amount": 100,
+    "investor_amounts": [
+      {
+        "name": "Investor A",
+        "requested_amount": 100,
+        "average_amount": 100
+      },
+      {
+        "name": "Investor B",
+        "requested_amount": 25,
+        "average_amount": 25
+      }
+    ]
+  }'
+```
 
-* Ruby version
-
-* System dependencies
-
-* Configuration
-
-* Database creation
-
-* Database initialization
-
-* How to run the test suite
-
-* Services (job queues, cache servers, search engines, etc.)
-
-* Deployment instructions
-
-* ...
+returns `{"Investor A":80.0,"Investor B":20.0}`
