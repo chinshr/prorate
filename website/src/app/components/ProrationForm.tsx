@@ -35,6 +35,24 @@ export default function ProrationForm({}: ProrationFormProps) {
     );
   };
 
+  const hasValidationErrors = (): boolean => {
+    // Check if there are any validation errors
+    if (Object.values(validationErrors).some(error => error !== '')) {
+      return true;
+    }
+
+    // Check if allocation is empty
+    if (!allocation || parseFloat(allocation) <= 0) {
+      return true;
+    }
+
+    // Check if all investors have valid data
+    return investors.some(investor => 
+      !investor.name || 
+      investor.requested_amount <= 0
+    );
+  };
+
   const debouncedSearch = useDebouncedCallback(async (query: string, index: number) => {
     try {
       const response = await fetch(`http://localhost:3001/api/investors?query=${encodeURIComponent(query)}`, {
@@ -299,9 +317,14 @@ export default function ProrationForm({}: ProrationFormProps) {
       <div className="pt-6">
         <button
           type="submit"
-          className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          disabled={hasValidationErrors()}
+          className={`px-6 py-2 text-white rounded ${
+            hasValidationErrors() 
+              ? 'bg-gray-400 cursor-not-allowed' 
+              : 'bg-blue-600 hover:bg-blue-700'
+          }`}
         >
-          Calculate Proration
+          Prorate
         </button>
       </div>
 
