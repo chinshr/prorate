@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client'
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useDebouncedCallback } from 'use-debounce';
 
 interface Investor {
@@ -11,25 +11,48 @@ interface Investor {
   average_amount: number;
 }
 
+interface InvestorSuggestion {
+  name: string;
+  slug: string;
+}
+
 interface ProrationFormProps {}
 
 export default function ProrationForm({}: ProrationFormProps) {
   const [allocation, setAllocation] = useState<string>('');
   const [investors, setInvestors] = useState<Investor[]>([{ name: '', requested_amount: 0, average_amount: 0 }]);
   const [proratedAmounts, setProratedAmounts] = useState<Record<string, number>>({});
+  const [suggestions, setSuggestions] = useState<InvestorSuggestion[]>([]);
+  const [activeSuggestionIndex, setActiveSuggestionIndex] = useState<number>(-1);
+  const [validationErrors, setValidationErrors] = useState<Record<number, string>>({});
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const debouncedFetch = useDebouncedCallback(async (name: string, index: number) => {
+  const debouncedSearch = useDebouncedCallback(async (query: string, index: number) => {
     try {
-      const slug = name.toLowerCase().replace(/\s+/g, '-');
-      // The slug is created from the name input, so it will match the investor's name
-      // e.g. "Investor A" becomes "investor-a"
+      const response = await fetch(`http://localhost:3001/api/investors?query=${encodeURIComponent(query)}`, {
+        cache: 'no-store'
+      });
+      const data = await response.json();
+      setSuggestions(data);
+      setActiveSuggestionIndex(-1);
+      
+      // Clear validation error if suggestions are found
+      if (data.length > 0) {
+        setValidationErrors(prev => ({ ...prev, [index]: '' }));
+      } else if (query.length > 0) {
+        setValidationErrors(prev => ({ ...prev, [index]: 'No matching investor found' }));
+      }
+    } catch (error) {
+      console.error('Error fetching investor suggestions:', error);
+    }
+  }, 300);
+
+  const debouncedFetch = useDebouncedCallback(async (slug: string, index: number) => {
+    try {
       const response = await fetch(`http://localhost:3001/api/investors/${encodeURIComponent(slug)}`, {
         cache: 'no-store'
       });
-
       const data = await response.json();
-
-      console.log('*** data', data);
 
       const updatedInvestors = [...investors];
       updatedInvestors[index] = {
@@ -38,15 +61,51 @@ export default function ProrationForm({}: ProrationFormProps) {
       };
       setInvestors(updatedInvestors);
     } catch (error) {
-      console.error('*** Error fetching investor average:', error);
+      console.error('Error fetching investor average:', error);
     }
   }, 300);
 
-  const fetchInvestorAverage = (name: string, index: number) => {
-    if (name && name.length > 0) {
-      debouncedFetch(name, index);
+  const handleInvestorNameChange = (e: React.ChangeEvent<HTMLInputElement>, investor: any, index: number) => {
+    const name = e.target.value;
+    const updatedInvestors = [...investors];
+    updatedInvestors[index] = { ...investor, name };
+    setInvestors(updatedInvestors);
+
+    if (name.length > 0) {
+      debouncedSearch(name, index);
+    } else {
+      setSuggestions([]);
+      setValidationErrors(prev => ({ ...prev, [index]: '' }));
     }
   };
+
+  const handleSuggestionClick = (suggestion: InvestorSuggestion, index: number) => {
+    const updatedInvestors = [...investors];
+    updatedInvestors[index] = { 
+      ...updatedInvestors[index], 
+      name: suggestion.name,
+      average_amount: suggestion.average_investment_amount
+    };
+    setInvestors(updatedInvestors);
+    setSuggestions([]);
+    setValidationErrors(prev => ({ ...prev, [index]: '' }));
+    const slug = suggestion.name.toLowerCase().replace(/ /g, '-');
+    debouncedFetch(slug, index);
+  };
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setSuggestions([]);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   const handleAddInvestor = () => {
     setInvestors([...investors, { name: '', requested_amount: 0, average_amount: 0 }]);
@@ -82,15 +141,6 @@ export default function ProrationForm({}: ProrationFormProps) {
     }
   };
 
-  const handleInvestorNameChange = (e: React.ChangeEvent<HTMLInputElement>, investor: any, index: number) => {
-    const name = e.target.value;
-      const updatedInvestors = [...investors];
-      updatedInvestors[index] = { ...investor, name };
-      setInvestors(updatedInvestors);
-
-      fetchInvestorAverage(name, index);
-  }
-
   return (
     <form onSubmit={handleSubmit} className="max-w-4xl mx-auto p-6 space-y-6">
       <div className="space-y-4">
@@ -120,14 +170,34 @@ export default function ProrationForm({}: ProrationFormProps) {
         <div className="space-y-4">
           {investors.map((investor, index) => (
             <div key={index} className="flex items-center space-x-4">
-              <input
-                type="text"
-                value={investor.name}
-                onChange={(e) => handleInvestorNameChange(e, investor, index)}
-                className="w-48 px-4 py-2 border rounded"
-                placeholder="Investor Name"
-                required
-              />
+              <div className="relative" ref={dropdownRef}>
+                <input
+                  type="text"
+                  value={investor.name}
+                  onChange={(e) => handleInvestorNameChange(e, investor, index)}
+                  className="w-48 px-4 py-2 border rounded"
+                  placeholder="Investor Name"
+                  required
+                />
+                {suggestions.length > 0 && (
+                  <div className="absolute z-10 w-48 mt-1 bg-white border rounded shadow-lg">
+                    {suggestions.map((suggestion, i) => (
+                      <div
+                        key={suggestion.slug}
+                        className={`px-4 py-2 cursor-pointer text-gray-500 hover:bg-gray-100 ${
+                          i === activeSuggestionIndex ? 'bg-gray-100' : ''
+                        }`}
+                        onClick={() => handleSuggestionClick(suggestion, index)}
+                      >
+                        {suggestion.name}
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {validationErrors[index] && (
+                  <p className="text-red-500 text-sm mt-1">{validationErrors[index]}</p>
+                )}
+              </div>
               
               <div className="relative">
                 <span className="absolute left-3 top-2">$</span>

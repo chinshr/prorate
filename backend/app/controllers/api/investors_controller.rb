@@ -1,6 +1,10 @@
 class Api::InvestorsController < ApplicationController
   def index
-    investors = Investor.all.map do |investor|
+    investors = if params[:query].present?
+      Investor.where("name LIKE ?", "%#{params[:query]}%")
+    else
+      Investor.all
+    end.map do |investor|
       {
         name: investor.name,
         average_investment_amount: investor.average_investment_amount
