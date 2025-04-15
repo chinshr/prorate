@@ -1,4 +1,4 @@
-class InvestorsController < ApplicationController
+class Api::InvestorsController < ApplicationController
   def index
     investors = Investor.all.map do |investor|
       {
@@ -12,6 +12,10 @@ class InvestorsController < ApplicationController
   
   def show
     investor = Investor.find_by!(name: params[:id].titleize)
-    render json: investor
+    render json: {
+      name: investor.name,
+      average_investment_amount: investor.average_investment_amount
+    }
+    # render json: investor
   end
 end 

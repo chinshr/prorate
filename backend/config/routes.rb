@@ -11,9 +11,11 @@ Rails.application.routes.draw do
 
   # Defines the root path route ("/")
   # root "posts#index"
-  resources :investors, only: [:index, :show] do
-    resources :investments, only: [:index]
+  namespace :api do
+    resources :investors, only: [:index, :show] do
+      resources :investments, only: [:index]
+    end
+    
+    post '/prorate', to: 'prorate#create'
   end
-  
-  post '/api/prorate', to: 'prorate#create'
 end

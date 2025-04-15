@@ -1,7 +1,9 @@
-class ProrateController < ApplicationController
+class Api::ProrateController < ApplicationController
   def create
     allocation_amount = prorate_params[:allocation_amount].to_f
     investor_amounts = prorate_params[:investor_amounts]
+    
+    puts "*** Investor amounts: #{investor_amounts.inspect}"
     
     # Calculate total average amount for proration
     total_average = investor_amounts.sum { |i| i[:average_amount].to_f }
