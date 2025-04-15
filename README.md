@@ -94,6 +94,8 @@ while others invested less than they were allowed to. One of deals happened two 
 other one happened two weeks ago. Please describe, in detail, how would you go about correcting this 
 issue and how would you communicate this to the affected customers.
 
+ANSWER IN `discovering-a-bug-answer.md`
+
 ### Squeezed down
 
 An angry investor sent us a note about how they keep getting squeezed down to $25K per deal even
@@ -104,6 +106,9 @@ the investor?
 
 In addition, can you think of a better way we could change the proration basis logic so that 
 this could potentially happen less often?   
+
+ANSWER IN `squeezed-down.md`
+
 
 # Setup
 

@@ -1,4 +1,37 @@
-# API
+# Rails backend
+
+## Setup
+
+Check versions, mine is:
+
+```
+$ ruby --version
+ruby 3.4.1 (2024-12-25 revision 48d4efcb85) +PRISM [arm64-darwin24]
+
+$ bundler --version
+Bundler version 2.6.3
+```
+
+Do the following before starting the server:
+
+```
+bundle install
+rails db:create
+rails db:migrate
+rails db:seed
+```
+
+Note: `rails s -p 3001` or use the `start.sh` script in the root folder to run this backend and the frontend togehter.
+
+## Test
+
+Run the tests with
+
+```
+bundle exec rails test test/controllers/api/prorate_controller_test.rb
+```
+
+## API
 
 curl http://localhost:3000/api/investors
 curl http://localhost:3000/api/investors?query=inve
