@@ -4,6 +4,10 @@
  - Please comment your code where appropriate to help us understand your decision-making.
  - Part 3 does not require coding. Instead, write your answers in the text files in the `answers` directory.
 
+# Running App
+
+![Running App](/runningapp.png)
+
 # Allocation proration tool
 
 When we raise money for startups on AngelList, there is always a target amount that we're trying to 
